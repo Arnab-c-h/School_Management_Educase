@@ -1,0 +1,121 @@
+{
+  "info": {
+    "name": "School Management API",
+    "description": "Postman collection for the Educase School Management API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:6999",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/",
+        "description": "Returns plain text: API is running!"
+      },
+      "response": []
+    },
+    {
+      "name": "Add School",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Delhi Public School\",\n  \"address\": \"Kolkata, West Bengal\",\n  \"latitude\": 22.5726,\n  \"longitude\": 88.3639\n}"
+        },
+        "url": "{{baseUrl}}/addSchool",
+        "description": "Adds a school. Expected success status: 201."
+      },
+      "response": []
+    },
+    {
+      "name": "List Schools",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/listSchools?latitude=22.5726&longitude=88.3639",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "listSchools"
+          ],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "22.5726"
+            },
+            {
+              "key": "longitude",
+              "value": "88.3639"
+            }
+          ]
+        },
+        "description": "Lists all schools sorted by distance from the given latitude and longitude."
+      },
+      "response": []
+    },
+    {
+      "name": "Add School - Missing Name",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address\": \"Kolkata, West Bengal\",\n  \"latitude\": 22.5726,\n  \"longitude\": 88.3639\n}"
+        },
+        "url": "{{baseUrl}}/addSchool",
+        "description": "Negative example. Expected status: 400 with status fail."
+      },
+      "response": []
+    },
+    {
+      "name": "Add School - Invalid Latitude",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Invalid School\",\n  \"address\": \"Kolkata, West Bengal\",\n  \"latitude\": 100,\n  \"longitude\": 88.3639\n}"
+        },
+        "url": "{{baseUrl}}/addSchool",
+        "description": "Negative example. Expected status: 400 with status fail."
+      },
+      "response": []
+    },
+    {
+      "name": "Unknown Route",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/unknown",
+        "description": "Negative example. Expected status: 404 with status fail."
+      },
+      "response": []
+    }
+  ]
+}
