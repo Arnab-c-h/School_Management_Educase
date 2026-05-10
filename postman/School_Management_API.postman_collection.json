@@ -1,29 +1,120 @@
 {
   "info": {
     "name": "School Management API",
-    "description": "Postman collection for the Educase School Management API.",
+    "description": "Generic Postman collection for the Educase School Management API.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:6999",
+      "value": "https://schoolmanagementeducase-production.up.railway.app",
+      "type": "string"
+    },
+    {
+      "key": "latitude",
+      "value": "22.5726",
+      "type": "string"
+    },
+    {
+      "key": "longitude",
+      "value": "88.3639",
+      "type": "string"
+    },
+    {
+      "key": "schoolName",
+      "value": "Postman Test School",
+      "type": "string"
+    },
+    {
+      "key": "schoolAddress",
+      "value": "Test Address",
+      "type": "string"
+    },
+    {
+      "key": "schoolLatitude",
+      "value": "22.5726",
+      "type": "string"
+    },
+    {
+      "key": "schoolLongitude",
+      "value": "88.3639",
+      "type": "string"
+    },
+    {
+      "key": "unknownPath",
+      "value": "unknown",
       "type": "string"
     }
   ],
   "item": [
     {
       "name": "Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('body confirms API is running', function () {",
+              "  pm.expect(pm.response.text()).to.include('API is running');",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": "{{baseUrl}}/",
-        "description": "Returns plain text: API is running!"
+        "description": "Checks whether the API is reachable."
       },
       "response": []
     },
     {
       "name": "Add School",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const name = pm.collectionVariables.get('schoolName') || 'Postman Test School';",
+              "pm.collectionVariables.set('generatedSchoolName', name + ' ' + Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "const expectedName = pm.collectionVariables.get('generatedSchoolName');",
+              "",
+              "pm.test('status is 201', function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('response is success', function () {",
+              "  pm.expect(json.status).to.eql('success');",
+              "});",
+              "",
+              "pm.test('school object is returned', function () {",
+              "  pm.expect(json.data).to.have.property('school');",
+              "  pm.expect(json.data.school.id).to.be.a('number');",
+              "  pm.expect(json.data.school.name).to.eql(expectedName);",
+              "  pm.expect(json.data.school.address).to.eql(pm.collectionVariables.get('schoolAddress'));",
+              "  pm.expect(json.data.school.latitude).to.be.a('number');",
+              "  pm.expect(json.data.school.longitude).to.be.a('number');",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -34,20 +125,65 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Delhi Public School\",\n  \"address\": \"Kolkata, West Bengal\",\n  \"latitude\": 22.5726,\n  \"longitude\": 88.3639\n}"
+          "raw": "{\n  \"name\": \"{{generatedSchoolName}}\",\n  \"address\": \"{{schoolAddress}}\",\n  \"latitude\": {{schoolLatitude}},\n  \"longitude\": {{schoolLongitude}}\n}"
         },
         "url": "{{baseUrl}}/addSchool",
-        "description": "Adds a school. Expected success status: 201."
+        "description": "Adds a school using collection variables."
       },
       "response": []
     },
     {
       "name": "List Schools",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "const schools = json.data && json.data.schools ? json.data.schools : [];",
+              "",
+              "pm.test('status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('response is success', function () {",
+              "  pm.expect(json.status).to.eql('success');",
+              "  pm.expect(json.results).to.eql(schools.length);",
+              "});",
+              "",
+              "pm.test('schools is an array', function () {",
+              "  pm.expect(schools).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('each school has distanceKm', function () {",
+              "  schools.forEach(function (school) {",
+              "    pm.expect(school).to.have.property('distanceKm');",
+              "    pm.expect(school.distanceKm).to.be.a('number');",
+              "  });",
+              "});",
+              "",
+              "pm.test('schools are sorted by distance', function () {",
+              "  for (let i = 1; i < schools.length; i += 1) {",
+              "    pm.expect(schools[i].distanceKm).to.be.at.least(schools[i - 1].distanceKm);",
+              "  }",
+              "});",
+              "",
+              "const expectedName = pm.collectionVariables.get('generatedSchoolName');",
+              "if (expectedName) {",
+              "  pm.test('created school is present when collection is run in order', function () {",
+              "    pm.expect(schools.some(function (school) { return school.name === expectedName; })).to.eql(true);",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/listSchools?latitude=22.5726&longitude=88.3639",
+          "raw": "{{baseUrl}}/listSchools?latitude={{latitude}}&longitude={{longitude}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -57,20 +193,40 @@
           "query": [
             {
               "key": "latitude",
-              "value": "22.5726"
+              "value": "{{latitude}}"
             },
             {
               "key": "longitude",
-              "value": "88.3639"
+              "value": "{{longitude}}"
             }
           ]
         },
-        "description": "Lists all schools sorted by distance from the given latitude and longitude."
+        "description": "Lists schools sorted by distance from the coordinates in collection variables."
       },
       "response": []
     },
     {
       "name": "Add School - Missing Name",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "",
+              "pm.test('status is 400', function () {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('response is fail', function () {",
+              "  pm.expect(json.status).to.eql('fail');",
+              "  pm.expect(json.message).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -81,15 +237,35 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"address\": \"Kolkata, West Bengal\",\n  \"latitude\": 22.5726,\n  \"longitude\": 88.3639\n}"
+          "raw": "{\n  \"address\": \"{{schoolAddress}}\",\n  \"latitude\": {{schoolLatitude}},\n  \"longitude\": {{schoolLongitude}}\n}"
         },
         "url": "{{baseUrl}}/addSchool",
-        "description": "Negative example. Expected status: 400 with status fail."
+        "description": "Validation check for a missing required field."
       },
       "response": []
     },
     {
       "name": "Add School - Invalid Latitude",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "",
+              "pm.test('status is 400', function () {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('response is fail', function () {",
+              "  pm.expect(json.status).to.eql('fail');",
+              "  pm.expect(json.message).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -100,20 +276,40 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Invalid School\",\n  \"address\": \"Kolkata, West Bengal\",\n  \"latitude\": 100,\n  \"longitude\": 88.3639\n}"
+          "raw": "{\n  \"name\": \"{{schoolName}} Invalid Latitude\",\n  \"address\": \"{{schoolAddress}}\",\n  \"latitude\": 100,\n  \"longitude\": {{schoolLongitude}}\n}"
         },
         "url": "{{baseUrl}}/addSchool",
-        "description": "Negative example. Expected status: 400 with status fail."
+        "description": "Validation check for out-of-range latitude."
       },
       "response": []
     },
     {
       "name": "Unknown Route",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "",
+              "pm.test('status is 404', function () {",
+              "  pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test('response is fail', function () {",
+              "  pm.expect(json.status).to.eql('fail');",
+              "  pm.expect(json.message).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
-        "url": "{{baseUrl}}/unknown",
-        "description": "Negative example. Expected status: 404 with status fail."
+        "url": "{{baseUrl}}/{{unknownPath}}",
+        "description": "Checks the global 404 handler."
       },
       "response": []
     }
