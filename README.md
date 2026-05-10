@@ -4,6 +4,12 @@ A small Express and MySQL API for the Educase school-management assignment.
 
 The API can add schools and return all saved schools sorted by distance from a given latitude and longitude.
 
+Live API:
+
+```text
+https://schoolmanagementeducase-production.up.railway.app
+```
+
 ## Stack
 
 - Node.js
@@ -44,6 +50,12 @@ npm install
 
 Create `.env` from `.env.example` and add your MySQL values.
 
+Local port:
+
+```env
+PORT=6999
+```
+
 Run the database schema:
 
 ```sql
@@ -68,9 +80,11 @@ Default URL:
 http://localhost:6999
 ```
 
+Railway injects its own `PORT` value at runtime. The current Railway deployment runs on port `8080` internally and is exposed through the public URL above. Do not hardcode `8080` in local `.env`.
+
 ## Environment Variables
 
-Railway MySQL provides these variables automatically:
+The app reads Railway MySQL variables first:
 
 ```env
 MYSQLHOST=
@@ -80,7 +94,7 @@ MYSQLPASSWORD=
 MYSQLDATABASE=
 ```
 
-The app also supports these fallback names for local use:
+It also supports these fallback names for local MySQL setups:
 
 ```env
 DB_HOST=
@@ -91,12 +105,16 @@ DB_NAME=
 DB_SSL=false
 ```
 
+On Railway, the API service uses variable references from the `MySQL` service. Secrets are managed by Railway and should not be committed.
+
 ## Routes
+
+Use `{baseUrl}` as either the local URL or the Railway URL.
 
 ### Health Check
 
 ```http
-GET /
+GET {baseUrl}/
 ```
 
 Response:
@@ -108,7 +126,7 @@ API is running!
 ### Add School
 
 ```http
-POST /addSchool
+POST {baseUrl}/addSchool
 ```
 
 Body:
@@ -142,7 +160,7 @@ Success:
 ### List Schools
 
 ```http
-GET /listSchools?latitude=22.5726&longitude=88.3639
+GET {baseUrl}/listSchools?latitude={latitude}&longitude={longitude}
 ```
 
 Success:
@@ -177,28 +195,43 @@ Validation errors return:
 
 ## Railway Deployment
 
-1. Create a Railway project.
-2. Add a MySQL service.
-3. Add this GitHub repository as the API service.
-4. Set the start command to:
+Current Railway setup:
 
 ```text
+Project: zestful-expression
+API service: School_Management_Educase
+Database service: MySQL
+Environment: production
+Public URL: https://schoolmanagementeducase-production.up.railway.app
+Internal runtime port: 8080
+Deployment status: SUCCESS
+```
+
+Railway build and start:
+
+```text
+npm install
 npm start
 ```
 
-5. In the API service variables, reference the MySQL service variables:
+API service variables:
 
 ```env
+NODE_ENV=production
 MYSQLHOST=${{MySQL.MYSQLHOST}}
 MYSQLPORT=${{MySQL.MYSQLPORT}}
 MYSQLUSER=${{MySQL.MYSQLUSER}}
 MYSQLPASSWORD=${{MySQL.MYSQLPASSWORD}}
 MYSQLDATABASE=${{MySQL.MYSQLDATABASE}}
-NODE_ENV=production
 ```
 
-6. Run `database/schema.sql` against the Railway MySQL database.
-7. Generate a public domain for the API service and test the routes.
+Database setup:
+
+```text
+Run database/schema.sql against the Railway MySQL service.
+```
+
+Do not set `PORT` manually on Railway unless needed. Railway provides it automatically.
 
 ## Postman
 
@@ -208,7 +241,17 @@ Import this collection:
 postman/School_Management_API.postman_collection.json
 ```
 
-Set `baseUrl` to your local URL or Railway public URL.
+Raw collection URL:
+
+```text
+https://raw.githubusercontent.com/Arnab-c-h/School_Management_Educase/main/postman/School_Management_API.postman_collection.json
+```
+
+The collection uses variables for `baseUrl`, coordinates, and school data. Set `baseUrl` to:
+
+```text
+https://schoolmanagementeducase-production.up.railway.app
+```
 
 ## Checks
 
